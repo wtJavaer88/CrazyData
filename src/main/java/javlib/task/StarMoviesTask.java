@@ -58,7 +58,7 @@ public class StarMoviesTask extends AbstractPageTask {
 				pageCount = pageCount - pages + 1;
 			}
 			for (int i = 2; i <= pageCount; i++) {
-				if (!SpiderLogMgr.isExist(UrlFormatter.getStarMoviesUrl(starCode, i))) {
+				if (!SpiderLogMgr.isExist("StarMoviesTask", UrlFormatter.getStarMoviesUrl(starCode, i))) {
 					SpiderHttpClient.getInstance().getNetPageThreadPool()
 							.execute(new StarMoviesTask(starCode, i, pages));
 				}

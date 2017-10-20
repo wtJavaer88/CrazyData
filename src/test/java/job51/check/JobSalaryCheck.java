@@ -76,14 +76,14 @@ public class JobSalaryCheck {
 	private static int getMonSalary(String s) {
 		int result = 0;
 		int number = (int) (BasicNumberUtil.getDouble(s) * 10000);
-		int rest = number - (number / 12 / 1000 * 1000) * 12;
-		if (rest < 250 * 12) {
+		int rest = number / 12 % 1000;
+		if (rest < 250) {
 			result = (number - number % 12000) / 12;
 		}
-		if (rest >= 250 * 12 && rest < 750 * 12) {
+		if (rest >= 250 && rest < 750) {
 			result = (number - number % 12000) / 12 + 500;
 		}
-		if (rest >= 750 * 12) {
+		if (rest >= 750) {
 			result = (number - number % 12000) / 12 + 1000;
 		}
 		return result;

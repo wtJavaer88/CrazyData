@@ -35,7 +35,7 @@ public class HotSongsAction implements MySpiderAction {
 			int id = Integer.parseInt(fieldMap.get("id").toString());
 			BasicFileUtil.writeFileString("netease-log.txt", "开始热门歌曲:" + id + "\r\n", null, true);
 			String url = "http://music.163.com/artist?id=" + id;
-			if (!SpiderLogMgr.isExist(id + ""))
+			if (!SpiderLogMgr.isExist("HotSongsAction", id + ""))
 				SpiderHttpClient.getInstance().getNetPageThreadPool().execute(new HotSongTask(url, true));
 			else
 				System.out.println("Get..." + id);

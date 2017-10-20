@@ -1,7 +1,8 @@
-package mafengwo;
+package mafengwo.city;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,8 +20,8 @@ import com.wnc.tools.FileOp;
 
 public class MorePoi {
 	public static void main(String[] args) throws IOException {
-		// parseJson();
-		parseDoc();
+		parseJson();
+		// parseDoc();
 	}
 
 	private static void parseDoc() throws IOException {
@@ -65,11 +66,18 @@ public class MorePoi {
 	}
 
 	private static void parseJson() {
-		List<String> readFrom = FileOp.readFrom("E:/CrazyData/demo/马蜂窝/page11.html");
+		List<String> readFrom = FileOp.readFrom("E:/CrazyData/demo/马蜂窝/city/city-gw.txt");
 		String string = StringUtils.join(readFrom, "");
 
 		JSONObject obj = JSONObject.parseObject(string.replace("\\n", ""));
 		System.out.println(obj.getInteger("has_more"));
 		System.out.println(obj.getString("html"));
+
+		List<String> readFrom2 = FileOp.readFrom("E:/CrazyData/demo/马蜂窝/city/city-hotel.txt");
+		String join = StringUtils.join(readFrom2, "").replace("\\\"", "\"").replace("\\\\", "\\").replace("\"{", "{")
+				.replace("}\"", "}");
+		System.out.println(join);
+		System.out.println(JSONObject.parseObject(join));
+		System.out.println(URLDecoder.decode("\u6d6a\u6f2b\u60c5\u4fa3"));
 	}
 }

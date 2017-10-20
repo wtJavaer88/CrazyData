@@ -3,15 +3,12 @@ package javlib.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.wnc.string.PatternUtil;
 import com.wnc.tools.FileOp;
 
 public class SpiderLogMgr {
 	public static List<String> existUrls;
 	public static List<String> retryUrls;
 	static {
-		// existUrls = readFile("starmovieurl.txt");
-		existUrls = readFile2("seeked-log.txt");
 		retryUrls = readFile("retrylog.txt");
 	}
 
@@ -27,18 +24,20 @@ public class SpiderLogMgr {
 	private static List<String> readFile2(String fileName) {
 		List<String> list = new ArrayList<String>();
 		try {
-			List<String> readFrom = FileOp.readFrom(fileName);
-			for (String string : readFrom) {
-				list.add(PatternUtil.getLastPattern(string, "\\d+"));
-			}
-			return list;
+			list = FileOp.readFrom(fileName);
+			// for (String string : readFrom) {
+			// list.add(PatternUtil.getLastPattern(string, "\\d+"));
+			// }
+			// return list;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return list;
 	}
 
-	public static boolean isExist(String url) {
+	public static boolean isExist(String app, String url) {
+		if (existUrls == null)
+			existUrls = readFile2(app);
 		return existUrls.contains(url);
 	}
 
