@@ -23,7 +23,7 @@ import mafengwo.entity.Note;
 import mafengwo.parse.ArticleListParser;
 
 public class MfwNoteTask extends AbstractPageTask {
-	private static final String NOTEALL_TXT = "F:/资源/爬虫/马蜂窝/note/noteall.txt";
+	public static final String NOTEALL_TXT = "F:/资源/爬虫/马蜂窝/note/noteall.txt";
 	private static final String NOTE_ERR_TXT = "F:/资源/爬虫/马蜂窝/note/note-err.txt";
 	int uid;
 	int pageIndex;
@@ -32,14 +32,14 @@ public class MfwNoteTask extends AbstractPageTask {
 		this.url = url;
 		this.pageIndex = BasicNumberUtil.getNumber(PatternUtil.getFirstPattern(url, "\\d+"));
 		this.uid = BasicNumberUtil.getNumber(PatternUtil.getLastPattern(url, "\\d+"));
-		// this.proxyFlag = true;
+		this.proxyFlag = true;
 	}
 
 	public MfwNoteTask(int uid, int pageIndex) {
 		this.uid = uid;
 		this.pageIndex = pageIndex;
 		this.url = "http://www.mafengwo.cn/wo/ajax_post.php?sAction=getArticle&iPage=" + pageIndex + "&iUid=" + uid;
-		// this.proxyFlag = true;
+		this.proxyFlag = true;
 	}
 
 	@Override
