@@ -17,13 +17,19 @@ public class KeywordToDb {
 		for (String tokens : FileOp.readFrom("F:/资源/爬虫/51job/keywords.txt")) {
 			job_id = PatternUtil.getFirstPattern(tokens, "\\d+");
 			features = PatternUtil.getFirstPatternGroup(tokens, "\\[(.*?)\\]").split(",");
+			boolean flag = false;
 			for (String string : features) {
 				trim = removeTailchar(string.trim(), '.').trim();
-				try {
-					DbExecMgr.execOnlyOneUpdate(
-							"INSERT INTO JOB_FEATURES(JOB_ID,FEATURE) values(" + job_id + ",'" + trim + "')");
-				} catch (SQLException e) {
-					e.printStackTrace();
+				if (flag || !DbExecMgr.isExistData(
+						"SELECT 1 FROM JOB_FEATURES WHERE job_id=" + job_id + " AND FEATURE='" + trim + "'")) {
+					flag = true;
+					System.out.println(trim);
+					try {
+						DbExecMgr.execOnlyOneUpdate(
+								"INSERT INTO JOB_FEATURES(JOB_ID,FEATURE) values(" + job_id + ",'" + trim + "')");
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}

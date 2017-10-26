@@ -16,7 +16,9 @@ public class SegParse {
 
 	public static void main(String[] args) {
 		System.out.println("A. 2323".matches("[a-zA-Z]{1}\\. .*?"));
-		String[] citylist = { "180200", "010000", "020000", "030000", "040000" };
+		// String[] citylist = { "180200", "010000", "020000", "030000",
+		// "040000" };
+		String[] citylist = { "030000", "040000" };
 		for (String city : citylist) {
 			String folder = "F:/资源/爬虫/51job/jobs/" + city + "/detail";
 			for (File f : new File(folder).listFiles()) {
