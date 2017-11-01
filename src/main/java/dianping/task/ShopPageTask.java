@@ -13,6 +13,7 @@ import com.wnc.basic.BasicDateUtil;
 import com.wnc.basic.BasicFileUtil;
 
 import db.DbExecMgr;
+import dianping.action.ShopPageAction;
 import dianping.entity.Shop;
 import dianping.entity.ShopDeal;
 import dianping.parser.ShopListPageParser;
@@ -20,7 +21,6 @@ import javlib.utils.RetryMgr;
 import spiderqueue.sqlreflect.SqlFastReflect;
 
 public class ShopPageTask extends AbstractPageTask {
-	private final static String huoguoStr = "http://www.dianping.com/search/category/9/10/g110%s";
 	private static final String ERR_TXT = "F:/资源/爬虫/大众点评/shop/cq-huoguo-shop-err.txt";
 
 	int pageIndex = 1;
@@ -37,7 +37,7 @@ public class ShopPageTask extends AbstractPageTask {
 
 	@Override
 	protected void retry() {
-		boolean addUrlAndStop = RetryMgr.addUrlAndStop(url, 10);
+		boolean addUrlAndStop = RetryMgr.addUrlAndStop(url, 40);
 		if (!addUrlAndStop) {
 			SpiderHttpClient.getInstance().getNetPageThreadPool()
 					.execute(new ShopPageTask(headUrl, pageIndex, zoneCode));
@@ -63,7 +63,7 @@ public class ShopPageTask extends AbstractPageTask {
 					fieldMap = (Map) zoneMap.get(i);
 					String code = String.valueOf(fieldMap.get("CODE"));
 					SpiderHttpClient.getInstance().getNetPageThreadPool()
-							.execute(new ShopPageTask(String.format(huoguoStr, code), 1, code));
+							.execute(new ShopPageTask(String.format(ShopPageAction.huoguoStr, code), 1, code));
 				}
 			} else {
 				System.out.println(zoneCode + " pages:" + maxPage);

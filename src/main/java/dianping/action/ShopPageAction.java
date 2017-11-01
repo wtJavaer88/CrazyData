@@ -9,11 +9,11 @@ import db.DbExecMgr;
 import dianping.task.ShopPageTask;
 
 public class ShopPageAction implements MySpiderAction {
-	private final static String huoguoStr = "http://www.dianping.com/search/category/9/10/g110%s";
-	private final static String CHONG_QING = "9";
+	private final static String CITY = "2";
+	public final static String huoguoStr = "http://www.dianping.com/search/category/" + CITY + "/10/g110%s";
 
 	public void execute() {
-		childZonesParse(CHONG_QING);
+		childZonesParse(CITY);
 	}
 
 	private static void childZonesParse(String pcode) {

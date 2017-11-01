@@ -21,12 +21,12 @@ public class CityZoneClient {
 	public static void main(String[] args) {
 		DBconnectionMgr.setJDBCName("jdbc:sqlite:D:\\database\\dianping.db");
 		CityZoneParser cityHotZoneParser = new CityZoneParser();
-		CityZone city = new CityZone("9", "重庆", "http://www.dianping.com/search/category/9/10");
+		CityZone city = new CityZone("2", "北京", "http://www.dianping.com/search/category/2/10");
 
 		List<CityZone> regions = cityHotZoneParser.getRegions(city);
 		city.setChildCount(regions.size());
 		insertCityZone(city);
-		log("重庆下属行政区数:" + city.getChildCount());
+		log("北京下属行政区数:" + city.getChildCount());
 
 		for (CityZone region : regions) {
 			List<CityZone> regionHotZones = cityHotZoneParser.getRegionHotZones(region);
