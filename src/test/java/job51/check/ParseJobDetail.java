@@ -1,5 +1,7 @@
 package job51.check;
 
+import static org.apache.commons.lang.StringEscapeUtils.escapeSql;
+
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -17,28 +19,36 @@ import com.wnc.basic.BasicFileUtil;
 import com.wnc.basic.BasicNumberUtil;
 import com.wnc.string.PatternUtil;
 
+import db.DBconnectionMgr;
 import db.DbExecMgr;
 import db.DbField;
 import db.DbFieldSqlUtil;
+import job51.entity.Company;
 import job51.entity.Job;
 import job51.entity.JobBasicCondition;
 import job51.entity.condition.RangeCondition;
 
-public abstract class ParseJobDetail2 {
+public abstract class ParseJobDetail {
 	public static void main(String[] args) {
 		// job_basic_condition
+		DBconnectionMgr.setJDBCName("jdbc:sqlite:D://database//51job.db");
+		initWelfareMap();
 		start();
 	}
 
 	private static void start() {
-		File file = new File("F:/资源/爬虫/51job/jobs/180200/detail");
-		for (File f : file.listFiles()) {
-			try {
-				parse(f);
-			} catch (Exception e) {
-				e.printStackTrace();
-				BasicFileUtil.writeFileString("joblist-parseErr.txt",
-						f.getAbsolutePath() + "-" + e.getMessage() + "\r\n", null, true);
+		DBconnectionMgr.setJDBCName("jdbc:sqlite:D:\\database\\51job.db");
+		String[] cities = new String[] { "010000", "020000", "030000", "040000" };
+		for (String city : cities) {
+			File file = new File("F:/资源/爬虫/51job/jobs/" + city + "/detail");
+			for (File f : file.listFiles()) {
+				try {
+					parse(f);
+				} catch (Exception e) {
+					e.printStackTrace();
+					BasicFileUtil.writeFileString("joblist-parseErr1002.txt",
+							f.getAbsolutePath() + "-" + e.getMessage() + "\r\n", null, true);
+				}
 			}
 		}
 	}
@@ -62,20 +72,52 @@ public abstract class ParseJobDetail2 {
 		// parseWelfare(jobId, parse);
 		// parseSalary(job, parse);
 		parseCompany(job, parse);
-		parseOthers(job, parse);
+		// parseOthers(job, parse);
+		// updateJobSalaryAndOthers(job);
+	}
+
+	private static void updateJobSalaryAndOthers(Job job) throws SQLException {
+		DbFieldSqlUtil util = new DbFieldSqlUtil("JOB");
+		RangeCondition salaryRange = job.getSalaryRange();
+		if (salaryRange.getBegin() != null)
+			util.addUpdateField(new DbField("SALARY1", salaryRange.getBegin() + ""));
+		if (salaryRange.getEnd() != null)
+			util.addUpdateField(new DbField("SALARY2", salaryRange.getEnd() + ""));
+		util.addUpdateField(new DbField("SALARY_RANGE", salaryRange.toString()));
+		util.addUpdateField(new DbField("WORK_CITY", job.getWorkCity()));
+		util.addUpdateField(new DbField("WORK_ZONE", job.getWorkZone()));
+		util.addUpdateField(new DbField("WORK_LOCATION", job.getWorkLocation()));
+		util.addWhereField(new DbField("JOB_ID", "" + job.getJobId()));
+		DbExecMgr.execOnlyOneUpdate(util.getUpdateSql());
+		System.out.println("更新工资成功");
 	}
 
 	private static void parseOthers(Job job, Document parse) {
+		// 工作地点信息
+		String text = parse
+				.select("body > div.tCompanyPage > div.tCompany_center.clearfix > div.tHeader.tHjob > div > div.cn > span")
+				.text().trim();
+		String workCity = PatternUtil.getFirstPatternGroup(text, "[\u4E00-\u9FA5]+");
+		String workZone = PatternUtil.getLastPatternGroup(text, "[\u4E00-\u9FA5]+");
+		job.setWorkCity(workCity);
+		job.setWorkZone(workZone);
+		job.setWorkLocation(parse
+				.select("body > div.tCompanyPage > div.tCompany_center.clearfix > div.tCompany_main > div:nth-child(5) > div > p")
+				.text());
 
 	}
 
-	private static void parseCompany(Job job, Document parse) {
+	private static void parseCompany(Job job, Document parse) throws SQLException {
 		Element first = parse
 				.select("div.tCompanyPage > div.tCompany_center.clearfix > div.tHeader.tHjob > div > div.cn > p.cname a")
 				.first();
+		Company company = new Company();
 		String url = first.attr("href");
+		String comId = PatternUtil.getLastPattern(url, "\\d+");
 		String name = first.text().trim();
-
+		company.setUrl(url);
+		company.setComId(comId);
+		company.setComName(name);
 		String text = parse
 				.select("body > div.tCompanyPage > div.tCompany_center.clearfix > div.tHeader.tHjob > div > div.cn > p.msg.ltype")
 				.text();
@@ -98,7 +140,24 @@ public abstract class ParseJobDetail2 {
 				}
 			}
 		}
-		System.out.println(yewu);
+		company.setCompanysize(size);
+		company.setCompanyType(type);
+		company.setYewu(yewu);
+		job.setCompany(company);
+
+		DbExecMgr.execOnlyOneUpdate("UPDATE JOB SET COM_ID='" + comId + "' WHERE job_id=" + job.getJobId());
+		if (!DbExecMgr.isExistData("COMPANY", "COM_ID", comId))
+			DbExecMgr.execOnlyOneUpdate(String.format(
+					"INSERT INTO COMPANY(COM_ID,URL,COM_NAME,COM_TYPE,COM_SIZE)  VALUES('%s','%s','%s','%s','%s')",
+					comId, url, escapeSql(name), escapeSql(type), escapeSql(size)));
+
+		for (String s : yewu) {
+			if (!DbExecMgr.isExistData(
+					"SELECT 1 FROM COM_YEWU WHERE COM_ID = " + comId + " AND YEWU = '" + escapeSql(s) + "'")) {
+				DbExecMgr.execOnlyOneUpdate(
+						"INSERT INTO COM_YEWU(COM_ID,YEWU)  VALUES(" + comId + ",'" + escapeSql(s) + "')");
+			}
+		}
 	}
 
 	private static void parseSalary(Job job, Document parse) throws IOException {
@@ -107,19 +166,27 @@ public abstract class ParseJobDetail2 {
 		job.setSalaryRange(parseSalary);
 	}
 
-	private static void parseWelfare(String jobId, Document parse) throws SQLException {
+	private static void parseWelfare(String jobId, Document parse) {
+		if (DbExecMgr.isExistData("job_welfare", "job_id", jobId)) {
+			return;
+		}
 		Elements select = parse.select(".jtag .t2 span");
 		for (Element element : select) {
-			String name = element.text();
-			if (!welfareMap.containsKey(name)) {
-				DbExecMgr.execOnlyOneUpdate("INSERT INTO WELFARE(NAME) VALUES('" + name + "')");
-				String id = DbExecMgr.getSelectSqlMap("SELECT ID FROM WELFARE WHERE NAME='" + name + "'").get("ID")
-						.toString();
-				welfareMap.put(name, id);
-				System.err.println(name + " - " + id);
+			try {
+				String name = element.text();
+				if (!welfareMap.containsKey(name)) {
+					DbExecMgr.execOnlyOneUpdate("INSERT INTO WELFARE(NAME) VALUES('" + name + "')");
+					String id = DbExecMgr.getSelectSqlMap("SELECT ID FROM WELFARE WHERE NAME='" + name + "'").get("ID")
+							.toString();
+					welfareMap.put(name, id);
+					System.err.println(name + " - " + id);
+				}
+				String id = welfareMap.get(name);
+				DbExecMgr.execOnlyOneUpdate(
+						"INSERT INTO JOB_WELFARE(JOB_ID,WELFARE_ID) VALUES(" + jobId + "," + id + ")");
+			} catch (SQLException e) {
+				e.printStackTrace();
 			}
-			String id = welfareMap.get(name);
-			DbExecMgr.execOnlyOneUpdate("INSERT INTO JOB_WELFARE(JOB_ID,WELFARE_ID) VALUES(" + jobId + "," + id + ")");
 		}
 	}
 
@@ -165,10 +232,13 @@ public abstract class ParseJobDetail2 {
 			// if (StringUtils.isNotBlank(headDesc))
 			// System.out.println(headDesc + "/" + text);
 		}
-		insert(jbc);
+		insertJbc(jbc);
 	}
 
-	private static void insert(JobBasicCondition jbc) throws SQLException {
+	private static void insertJbc(JobBasicCondition jbc) throws SQLException {
+		if (DbExecMgr.isExistData("job_basic_condition", "job_id", jbc.getJobId())) {
+			return;
+		}
 		DbFieldSqlUtil util = new DbFieldSqlUtil("job_basic_condition");
 		util.addInsertField(new DbField("job_id", jbc.getJobId()));
 		util.addInsertField(new DbField("year_exp", jbc.getYear()));

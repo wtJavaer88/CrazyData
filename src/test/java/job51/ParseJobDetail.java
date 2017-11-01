@@ -146,8 +146,7 @@ public abstract class ParseJobDetail {
 		company.setYewu(yewu);
 		job.setCompany(company);
 
-		// DbExecMgr.execOnlyOneUpdate("UPDATE JOB SET COM_ID='" + comId + "'
-		// WHERE job_id=" + job.getJobId());
+		DbExecMgr.execOnlyOneUpdate("UPDATE JOB SET COM_ID='" + comId + "' WHERE job_id=" + job.getJobId());
 		if (!DbExecMgr.isExistData("COMPANY", "COM_ID", comId))
 			DbExecMgr.execOnlyOneUpdate(String.format(
 					"INSERT INTO COMPANY(COM_ID,URL,COM_NAME,COM_TYPE,COM_SIZE)  VALUES('%s','%s','%s','%s','%s')",

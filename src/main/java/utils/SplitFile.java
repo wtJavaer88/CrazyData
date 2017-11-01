@@ -14,7 +14,7 @@ public class SplitFile {
 	private static final String EXTENDS = " extends ";
 
 	public static void main(String[] args) {
-		List<String> readFrom = FileOp.readFrom("D:/job51-entitys.java");
+		List<String> readFrom = FileOp.readFrom("D:/dianping.java");
 		String fileName = "";
 		List<String> lines = new ArrayList<String>(100);
 		for (String string : readFrom) {
